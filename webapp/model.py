@@ -10,4 +10,4 @@ class Fields(db.Model):
 
     """Метод для вывода объекта при print()"""
     def __repr__(self):
-        return '<Fields {} {}>'.format(self.field_id, self.field_name)
+        return '<Field {} {}>'.format(self.field_id, self.field_name)

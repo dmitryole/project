@@ -1,3 +1,4 @@
+import logging
 import requests
 from .config import STAGE_JIRA_URL
 
@@ -12,9 +13,11 @@ def status_jira():
         return 'Stage Jira доступен'
     # Обработка ошибок Jira
     except (ValueError):
+        logging.info('Ошибка: Ошибка при на стороне сервиса')
         return 'Stage Jira не доступна - обратитесь к ДЦС'
     # Обработка ответа при отсутствии VPN
     except (requests.exceptions.ConnectionError):
+        logging.info('Ошибка: Ошибка при на стороне пользователя')
         return 'Stage Jira не доступна - проверте VPN'
 
 if __name__ == "__main__":

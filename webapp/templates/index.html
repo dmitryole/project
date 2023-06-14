@@ -12,11 +12,11 @@
   </head>
   <body>
     <div class="container">
-    <h1>Cтатус Jira:</h1>
+    <h1>Cтатус Jira: {{status}}</h1>
     <div class="row">
       <div class="col-8">
         <h2>Поля</h2>
-        {% for feild in feilds_list %}
+        {% for field in feilds_list %}
         <p>{{ field.field_id }} : {{ field.field_name }}</p>
         <hr />
         {% endfor %}

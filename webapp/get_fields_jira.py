@@ -1,3 +1,4 @@
+import logging
 import requests
 from .config import STAGE_JIRA_URL, STAGE_JIRA_API_KEY
 
@@ -9,27 +10,26 @@ def get_fields():
     headers = {
     "Authorization": f'Bearer {STAGE_JIRA_API_KEY}'
     }
-    responce = requests.get(url,headers=headers)
-    """Логика при статусе ответа Jira (ИЗМЕНИТЬ!!!)"""
-    if 200 <= responce.status_code < 300:
-        data = responce.json()
+    response = requests.get(url,headers=headers)
+    if response.ok:
+        data = response.json()
         return data
     else:
-        print('Ошибка: Ошибка при подключении к Jira', responce)
+        logging.info('Ошибка: Ошибка при подключении к Jira', response)
 
 """Вытаскивание значения атрибутов id и name"""
-def get_filds_id_and_name():
+def get_fields_id_and_name():
     data = get_fields()
     """Проходимся по JSON"""
     for field in data:
-        field_id = field['id']
-        field_name = field['name']
-        save_filds(field_id, field_name)
+        save_fields(field['id'], field['name'])
+
+    
 
 """ Функция записи в БД 
 (Требуется реализовать проверку, что у кортежа не изменился атрибут name.
 В случае изменения - перезаписать атрибут name)"""
-def save_filds(field_id, field_name):
+def save_fields(field_id, field_name):
     """Выборка из БД"""
     new_fields = Fields.query.filter(Fields.field_id == field_id).count()
     print(new_fields)

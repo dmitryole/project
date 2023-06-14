@@ -21,10 +21,7 @@ def get_fields():
 def get_fields_id_and_name():
     data = get_fields()
     """Проходимся по JSON"""
-    for field in data:
-        save_fields(field['id'], field['name'])
-
-    
+    [save_fields(field['id'], field['name']) for field in data]
 
 """ Функция записи в БД 
 (Требуется реализовать проверку, что у кортежа не изменился атрибут name.

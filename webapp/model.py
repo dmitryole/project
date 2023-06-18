@@ -2,8 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-"""Класс Поля"""
+
 class Fields(db.Model):
+    """ Класс Поля """
     id = db.Column(db.Integer, primary_key=True)
     field_id = db.Column(db.String, unique=True, nullable=False)
     field_name = db.Column(db.String, nullable=False)

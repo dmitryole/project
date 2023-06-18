@@ -2,6 +2,8 @@
 config.py
 settings.py
 .__pycache__/
+.vscode/
+*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

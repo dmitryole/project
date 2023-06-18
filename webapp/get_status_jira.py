@@ -2,13 +2,14 @@ import logging
 import requests
 from .config import STAGE_JIRA_URL
 
-"""Функция проверки статуса Jira"""
+
 def status_jira():
-    # Обработка ответа при ответе Jira 
+    """Функция проверки статуса Jira"""
+    """Обработка ответа при ответе Jira"""
     try:
-        # Запрос
+        """Запрос"""
         result = requests.get(STAGE_JIRA_URL)
-        # Обработка сетевых ошибок
+        """Обработка сетевых ошибок"""
         result.raise_for_status()
         return 'Stage Jira доступен'
     # Обработка ошибок Jira
@@ -19,6 +20,7 @@ def status_jira():
     except (requests.exceptions.ConnectionError):
         logging.info('Ошибка: Ошибка при на стороне пользователя')
         return 'Stage Jira не доступна - проверте VPN'
+
 
 if __name__ == "__main__":
     print(status_jira())

@@ -1,22 +1,13 @@
-import logging
-import requests
-from .config import STAGE_JIRA_URL, STAGE_JIRA_API_KEY
+from .config import jira
 
 from .model import db, Fields
 
+"""Зарос всех полей jira"""
+
 
 def get_fields():
-    """API-запрос всех полей Jira"""
-    url = f'{STAGE_JIRA_URL}/rest/api/2/field'
-    headers = {
-        "Authorization": f'Bearer {STAGE_JIRA_API_KEY}'
-    }
-    response = requests.get(url, headers=headers)
-    if response.ok:
-        data = response.json()
-        return data
-    else:
-        logging.info('Ошибка: Ошибка при подключении к Jira', response)
+    data = jira.fields()
+    return data
 
 
 """Вытаскивание значения атрибутов id и name"""

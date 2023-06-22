@@ -17,28 +17,30 @@ def get_fields_id_and_name():
     data = get_fields()
     """Проходимся по JSON"""
     for field in data:
-        save_fields(field['id'], field['name'])
+        save_field(field['id'], field['name'])
 
 
-""" Функция записи в БД
-(Требуется реализовать проверку, что у кортежа не изменился атрибут name.
-В случае изменения - перезаписать атрибут name)"""
+""" Функция записи в БД"""
 
 
-def save_fields(field_id, field_name):
-    """ Функция записи в БД
-    (Требуется реализовать проверку, что у кортежа не изменился атрибут name.
-    В случае изменения - перезаписать атрибут name)"""
-    """Выборка из БД"""
-    new_fields = Fields.query.filter(Fields.field_id == field_id).count()
-    print(new_fields)
-    if not new_fields:
+def save_field(field_id, field_name):
+    """Проверяем есть ли такой field_id уже в БД"""
+    query = Fields.query.filter(Fields.field_id == field_id).one_or_none()
+    
+    if query is None:
         """Создаем объект класса Fields"""
-        new_fields = Fields(field_id=field_id, field_name=field_name)
+        new_field = Fields(field_id=field_id, field_name=field_name)
         """Кладем в сессию SQLAlchemy"""
-        db.session.add(new_fields)
+        db.session.add(new_field)
         """Проливаем в БД"""
         db.session.commit()
+    
+    else:
+        """Проверяем совпадает ли атрибут field_name"""
+        if query.field_name != field_name:
+            """Обновляем атрибут field_name"""
+            query.field_name = field_name
+            db.session.commit()
 
 
 if __name__ == "__main__":

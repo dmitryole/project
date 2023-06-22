@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, render_template
+from flask import Flask, render_template, flash
 from .get_status_jira import status_jira
 from .model import db, Fields
 
@@ -21,13 +21,12 @@ def create_app():
     def index():
         title = "Микросервис отчетов Jira"
         feilds_list = Fields.query.order_by(Fields.id.desc()).all()
-        status = status_jira()
+        flash(status_jira())
         """Передаем значения переменных на фронт"""
         return render_template(
             'index.html',
             page_title=title,
-            feilds_list=feilds_list,
-            status=status)
+            feilds_list=feilds_list, )
     logging.info("Сервис запустился")
     return app
 

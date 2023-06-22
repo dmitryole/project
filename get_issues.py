@@ -1,3 +1,5 @@
+import csv
+
 from webapp.config import jira
 
 """Функция запроса задач с определеными полями"""
@@ -23,37 +25,52 @@ def get_all_issues(jql_str, fields):
                                           fields=fields)
         # Выход из цыкла, когда страница пустая
         if len(chunk_issues) == 0:
+            print('break')
             break
-        # Вытаскивание полей из задач
-        issues.append(get_fields_issues(chunk_issues, fields))
+        # Перебор задач
+        for issue in chunk_issues:          
+            # Вытаскивание полей из задач
+            issues.append(get_fields_issues(issue, fields))
         # Переход на элемент на следующей страницы
         start_at += max_results
-        return issues
+    return issues
 
 
 """Функция вытаскиванния полей из задачи"""
 
 
-def get_fields_issues(chunk_issues, fields):
-    # Перебор задач
-    for issue in chunk_issues:
+def get_fields_issues(issue, fields):
+    field_issue = {}
+    # Перебор полей
+    for field in fields:
         # Фиксируем ключ задачи
         field_issue = {'key': issue.key}
-        # Перебор полей
-        for field in fields:
-            # Добавляем поля в словарик задачи
-            field_issue[field] = getattr(issue.fields, field)
+        # Добавляем поля в словарик задачи
+        field_issue[field] = getattr(issue.fields, field)
     return field_issue
+
+
+"""Функция записи полученого словаря в CSV"""
+
+
+def generate_data(data):
+    with open('issues.csv', 'w', encoding='utf-8', newline='') as f:
+        # Вытаскиваем ключи словаря
+        fields = list(data[0].keys())
+        writer = csv.DictWriter(f, fields, delimiter=';')
+        writer.writeheader()
+        for chunk_data in data:
+            writer.writerow(chunk_data)
 
 
 if __name__ == "__main__":
     sample_jql = \
-        'key = SIRIUS-36505 OR key = SIRIUS-36549'
+        'project = ATL AND Sprint = 325'
     # Поле ключ будет по умолчанию
-    sample_fields = ['summary',
-                     'customfield_21501',
-                     'description']
-    print(get_all_issues(sample_jql, sample_fields))
+    sample_fields = ['summary']
+    data = get_all_issues(sample_jql, sample_fields)
+    print(data)
+    # generate_data(data)
 
 
 """

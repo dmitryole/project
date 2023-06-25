@@ -1,6 +1,7 @@
 from .config import jira
 
-from .model import db, Fields
+from .db import db
+from .fields.models import Fields
 
 """Зарос всех полей jira"""
 
@@ -21,12 +22,13 @@ def get_fields_id_and_name():
 
 
 """ Функция записи в БД"""
+"""(Нужно реализация проверки, что поле не было удалено на стороне Jira)"""
 
 
 def save_field(field_id, field_name):
     """Проверяем есть ли такой field_id уже в БД"""
     query = Fields.query.filter(Fields.field_id == field_id).one_or_none()
-    
+
     if query is None:
         """Создаем объект класса Fields"""
         new_field = Fields(field_id=field_id, field_name=field_name)
@@ -34,13 +36,12 @@ def save_field(field_id, field_name):
         db.session.add(new_field)
         """Проливаем в БД"""
         db.session.commit()
-    
-    else:
-        """Проверяем совпадает ли атрибут field_name"""
-        if query.field_name != field_name:
-            """Обновляем атрибут field_name"""
-            query.field_name = field_name
-            db.session.commit()
+
+    # Проверяем совпадает ли атрибут field_name
+    elif query.field_name != field_name:
+        """Обновляем атрибут field_name"""
+        query.field_name = field_name
+        db.session.commit()
 
 
 if __name__ == "__main__":

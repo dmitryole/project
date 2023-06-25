@@ -28,7 +28,7 @@ def get_all_issues(jql_str, fields):
             print('break')
             break
         # Перебор задач
-        for issue in chunk_issues:          
+        for issue in chunk_issues:
             # Вытаскивание полей из задач
             issues.append(get_fields_issues(issue, fields))
         # Переход на элемент на следующей страницы

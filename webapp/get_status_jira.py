@@ -1,6 +1,6 @@
 import logging
 import requests
-from .config import STAGE_JIRA_URL
+from .config import JIRA_URL
 
 
 def status_jira():
@@ -8,7 +8,7 @@ def status_jira():
     """Обработка ответа при ответе Jira"""
     try:
         """Запрос"""
-        result = requests.get(STAGE_JIRA_URL)
+        result = requests.get(JIRA_URL)
         """Обработка сетевых ошибок"""
         result.raise_for_status()
         return 'Сервер Jira доступен'

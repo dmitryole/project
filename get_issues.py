@@ -1,129 +1,92 @@
-import requests
-from webapp.config import STAGE_JIRA_URL, STAGE_JIRA_API_KEY
+import csv
+
+from webapp.config import jira
+
+"""Функция запроса задач с определеными полями"""
 
 
-def get_issue():
-    """GET API-запрос задач Jira"""
-    url = f'{STAGE_JIRA_URL}/rest/api/2/search'
-    headers = {
-        "Authorization": f'Bearer {STAGE_JIRA_API_KEY}'
-    }
-    params = {
-        # Cтрока запроса JQL
-        "jql":
-        "key = ATL-1322",
-        # Индекс первого возвратного выпуска (на основе 0)
-        "startAt": "",
-        # Максимальное количество возвращаемых выпусков (по умолчанию 50)
-        "maxResults": "",
-        # Cледует ли проверять JQL-запрос
-        "validateQuery": "true",
-        # Список полей, возвращаемых для каждой задачи
-        "fields": "summary,customfield_12203",
-        # Список параметров, которые необходимо развернуть
-        "expand": ""
-    }
-    response = requests.get(url, headers=headers, params=params)
-    if response.ok:
-        return response.json()
-    else:
-        print('Ошибка: Ошибка при подключении к Jira', response)
+def get_all_issues(jql_str, fields):
+    # Список задач с полями
+    issues = []
+    # Стартовый элемент
+    start_at = 0
+    # Количество возрашаемых элементов
+    max_results = 100
+    # Цыкл прохода по страницам запроса
+    while True:
+        chunk_issues = jira.search_issues(
+                                          # JQL поиск
+                                          jql_str=jql_str,
+                                          # Начальный элемент страницы
+                                          startAt=start_at,
+                                          # Элементов на странице
+                                          maxResults=max_results,
+                                          # Определяем поля
+                                          fields=fields)
+        # Выход из цыкла, когда страница пустая
+        if len(chunk_issues) == 0:
+            print('break')
+            break
+        # Перебор задач
+        for issue in chunk_issues:
+            # Вытаскивание полей из задач
+            issues.append(get_fields_issues(issue, fields))
+        # Переход на элемент на следующей страницы
+        start_at += max_results
+    return issues
 
 
-# print(get_issue())
+"""Функция вытаскиванния полей из задачи"""
+
+
+def get_fields_issues(issue, fields):
+    field_issue = {}
+    # Перебор полей
+    for field in fields:
+        # Фиксируем ключ задачи
+        field_issue = {'key': issue.key}
+        # Добавляем поля в словарик задачи
+        field_issue[field] = getattr(issue.fields, field)
+    return field_issue
+
+
+"""Функция записи полученого словаря в CSV"""
+
+
+def generate_data(data):
+    with open('issues.csv', 'w', encoding='utf-8', newline='') as f:
+        # Вытаскиваем ключи словаря
+        fields = list(data[0].keys())
+        writer = csv.DictWriter(f, fields, delimiter=';')
+        writer.writeheader()
+        for chunk_data in data:
+            writer.writerow(chunk_data)
+
+
+if __name__ == "__main__":
+    sample_jql = \
+        'project = ATL AND Sprint = 325'
+    # Поле ключ будет по умолчанию
+    sample_fields = ['summary']
+    data = get_all_issues(sample_jql, sample_fields)
+    print(data)
+    # generate_data(data)
+
+
 """
-{
-    'expand': 'names,schema',
-    'startAt': 0,
-    'maxResults': 50,
-    'total': 1,
-    'issues': [{
-        'expand':
-            'operations,versionedRepresentations,editmeta,changelog,renderedFields',
-        'id': '190639',
-        'self': 'https://stage-jira.',
-        'key': 'ATL-1322',
-        'fields': {
-            'summary': 'Поддержка продуктов в проекте '
-        }
-    }]
-}
-"""
-
-
-def post_issue():
-    """POST API-запрос задач Jira"""
-    url = f'{STAGE_JIRA_URL}/rest/api/2/search'
-    fields = [
-                "summary",
-                "status",
-                "assignee",
-                "customfield_21501"
-            ]
-    jql = "key = SIRIUS-36505"
-    startAt = 0
-    maxResults = 15
-    headers = {
-        "Authorization": f'Bearer {STAGE_JIRA_API_KEY}'
+print:
+[
+    {
+        'key': 'SIRIUS-36549',
+        'summary': 'тест',
+        'description': None,
+        'customfield_21501': ['187711367 (CLIBD-392)']
+    },
+    {
+        'key': 'SIRIUS-36505',
+        'summary': 'Обновление в новом ЛК',
+        'description': 'Доброе время суток',
+        'customfield_21501': ['207700677 (CLIBD-61544)']
     }
-    body = {
-            "jql": jql,
-            "startAt": startAt,
-            "maxResults": maxResults,
-            "fields": fields
-    }
-    response = requests.post(url, headers=headers, json=body)
-    if response.ok:
-        return response.json()['issues']
-    else:
-        print('Ошибка: Ошибка при подключении к Jira', response)
-
-
-print(post_issue())
-"""
-{
-    'expand': 'names,schema',
-    'startAt': 0,
-    'maxResults': 15,
-    'total': 1,
-    'issues': [{
-        'expand':
-            'operations,versionedRepresentations,editmeta,changelog,renderedFields',
-        'id': '190639',
-        'self': 'https://stage-jira.',
-        'key': 'ATL-1322',
-        'fields': {
-            'summary': 'Поддержка продуктов в проекте',
-            'assignee': {
-                'self': 'https://stage-jira.',
-                'name': 'azhitnikova',
-                'key': 'JIRAUSER34106',
-                'avatarUrls': {
-                    '48x48': 'https://stage-jira',
-                    '24x24': 'https://stage-jira',
-                    '16x16': 'https://stage-jira',
-                    '32x32': 'https://stage-jira'
-                },
-                'displayName': 'Анна ******',
-                'active': True,
-                'timeZone': 'Europe/Moscow'
-            },
-            'status': {
-                'self': 'https://stage-jira',
-                'description':
-                    'This was auto-generated by Jira Service Desk during',
-                'iconUrl': 'https://stage-jira',
-                'name': 'Готово',
-                'id': '11512',
-                'statusCategory': {
-                    'self': 'https://stage-jira',
-                    'id': 3,
-                    'key': 'done',
-                    'colorName': 'success',
-                    'name': 'Выполнено'
-                }
-            }
-        }
-    }]
-}
+]
 """

@@ -1,6 +1,6 @@
 # Отчеты из Jira Data Center
 
-Программа предоставляет возможность формировать выборку задач по JQL и настраивать колонки отчета по полям зада
+Программа предоставляет возможность формировать выборку задач по JQL и настраивать колонки отчета по полям задач
 
 ### Установка
 
@@ -16,15 +16,14 @@
   ```
 3. Создайте файл config.py и создайте в нем базовые переменные:
   ```
-  JIRA_USER_LOGIN = "Username для авторизации в Jira"
   JIRA_API_KEY = "Токен Username"
   JIRA_URL = "URL инстанса Jira"
   basedir = os.path.abspath(os.path.dirname(__file__))
-  SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'jira.db')
+  SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'webapp.db')
   ```
 ### Запуск программы
 
-Для запуска программы запустите файл __init__.py:
+Для запуска программы запустите файл run.bat:
 ```
-  > set FLASK_APP=webapp && set FLASK_ENV=development && set FLASK_DEBUG=1 && flask run
+  > run
 ```

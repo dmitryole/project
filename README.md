@@ -16,10 +16,7 @@
   ```
 3. Создайте файл config.py и создайте в нем базовые переменные:
   ```
-  JIRA_API_KEY = "Токен Username"
   JIRA_URL = "URL инстанса Jira"
-  basedir = os.path.abspath(os.path.dirname(__file__))
-  SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'webapp.db')
   ```
 ### Запуск программы
 

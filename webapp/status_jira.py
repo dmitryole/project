@@ -1,15 +1,15 @@
+from flask import current_app
 import logging
 import requests
-from .config import JIRA_URL
 
 
+# Функция проверки статуса Jira
 def status_jira():
-    """Функция проверки статуса Jira"""
-    """Обработка ответа при ответе Jira"""
+    # Обработка ответа при ответе Jira
     try:
-        """Запрос"""
-        result = requests.get(JIRA_URL)
-        """Обработка сетевых ошибок"""
+        # Запрос
+        result = requests.get(current_app.config['JIRA_URL'])
+        # Обработка сетевых ошибок
         result.raise_for_status()
         return 'Сервер Jira доступен'
     # Обработка ошибок Jira

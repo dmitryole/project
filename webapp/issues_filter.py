@@ -4,7 +4,7 @@ import requests
 import logging
 import csv
 
-from webapp.config import JIRA_URL, JIRA_API_KEY
+from config import JIRA_URL, JIRA_API_KEY
 
 
 def process_general_CSV_from_filter(filter, jira_api_key):
@@ -14,13 +14,13 @@ def process_general_CSV_from_filter(filter, jira_api_key):
     columns = get_columns_filter(filter, jira_api_key)
     # Вытаскивание наименования колонок фильтра
     label_columns = get_label_of_columns(columns)
-    # Функция вытаскиванния значений полей из задачи
+    # Функция вытаскивания значений полей из задачи
     value_columns = get_value_of_columns(columns)
-    # Cоздание ссесии с Jira
+    # Создание сессии с Jira
     client_jira = jira(jira_api_key)
-    # Функция запроса задач с определеными полями
+    # Функция запроса задач с определенными полями
     issues = get_all_issues(client_jira, sql, value_columns)
-    # Функция записи полученого словаря в CSV
+    # Функция записи полученного словаря в CSV
     generate_data(issues, label_columns, filter)
 
 
@@ -48,7 +48,7 @@ def get_label_of_columns(columns):
     return label_columns
 
 
-# Функция вытаскиванния значений полей из задачи
+# Функция вытаскивания значений полей из задачи
 def get_value_of_columns(columns):
     value_columns = []
     for column in columns:
@@ -61,7 +61,7 @@ def get_value_of_columns(columns):
     return value_columns
 
 
-# Cоздание ссесии с Jira
+# Создание сессии с Jira
 def jira(api_key):
     try:
         jira = JIRA(
@@ -72,25 +72,26 @@ def jira(api_key):
         logging.info('Ошибка: Соединение с JIRA не успешно')
 
 
+# Функция запроса задач с определенными полями
 def get_all_issues(jira, jql_str, fields):
     # Список задач с полями
     issues = []
     # Стартовый элемент
     start_at = 0
-    # Количество возрашаемых элементов
+    # Количество возвращаемых элементов
     max_results = 100
-    # Цыкл прохода по страницам запроса
+    # Цикл прохода по страницам запроса
     while True:
         chunk_issues = jira.search_issues(
                                           # JQL поиск
                                           jql_str=jql_str,
                                           # Начальный элемент страницы
                                           startAt=start_at,
-                                          # Элементов на странице
+                                          # Кол. элементов на странице
                                           maxResults=max_results,
-                                          # Определяем поля
+                                          # Запрашиваемые поля
                                           fields=fields)
-        # Выход из цыкла, когда страница пустая
+        # Выход из цикла, когда страница пустая
         if len(chunk_issues) == 0:
             break
         # Перебор задач
@@ -108,10 +109,10 @@ def get_fields_issues(issue, fields):
     field_issue = {}
     # Перебор полей
     for field in fields:
-        # Привильно занисываем атрибут "Key"
+        # Правильно записываем атрибут "Key"
         if field == 'issuekey':
             field_issue['key'] = issue.key
-        # Добавляем поля в словарик задачи
+        # Добавляем поля в словарь задачи
         else:
             field_issue[field] = get_value_field(issue, field)
     return field_issue
@@ -132,12 +133,12 @@ def get_value_field(issue, field):
             value_field = datetime.strptime(
                 value_field, '%Y-%m-%dT%H:%M:%S.%f%z')
             return value_field.strftime('%d.%m.%y')
-        # Если страка не преобразуется, то возврашаем
+        # Если строка не преобразуется, то возвращаем
         except (ValueError):
             return value_field
 
 
-# Функция записи полученого словаря в CSV
+# Функция записи полученного словаря в CSV
 def generate_data(data, label, filter):
     with open(f'webapp\issues_from_filter_{filter}.csv',
               'w', encoding='utf-8', newline='') as f:
@@ -153,5 +154,5 @@ def generate_data(data, label, filter):
 
 if __name__ == "__main__":
     jira_api_key = JIRA_API_KEY
-    filter = '25701'
+    filter = '25700'
     process_general_CSV_from_filter(filter, jira_api_key)

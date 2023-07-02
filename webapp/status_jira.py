@@ -5,7 +5,7 @@ import requests
 
 # Функция проверки статуса Jira
 def status_jira():
-    # Обработка ответа при ответе Jira
+    # Обработка ответа Jira
     try:
         # Запрос
         result = requests.get(current_app.config['JIRA_URL'])

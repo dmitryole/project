@@ -4,24 +4,32 @@ import requests
 import logging
 import csv
 
-from config import JIRA_URL, JIRA_API_KEY
+from webapp.config import JIRA_URL, JIRA_API_KEY
 
 
 def process_general_CSV_from_filter(filter, jira_api_key):
     # Вытаскивание JQL из фильтра
-    sql = get_jql_filter(filter, jira_api_key)
-    # Вытаскивание колонок из фильтра
-    columns = get_columns_filter(filter, jira_api_key)
-    # Вытаскивание наименования колонок фильтра
-    label_columns = get_label_of_columns(columns)
-    # Функция вытаскивания значений полей из задачи
-    value_columns = get_value_of_columns(columns)
-    # Создание сессии с Jira
-    client_jira = jira(jira_api_key)
-    # Функция запроса задач с определенными полями
-    issues = get_all_issues(client_jira, sql, value_columns)
-    # Функция записи полученного словаря в CSV
-    generate_data(issues, label_columns, filter)
+    jql = get_jql_filter(filter, jira_api_key)
+    if jql.get('bool'):
+        # Вытаскивание колонок из фильтра
+        columns = get_columns_filter(filter, jira_api_key)
+        if columns.get('bool'):
+            # Вытаскивание наименования колонок фильтра
+            label_columns = get_label_of_columns(columns['data'])
+            # Функция вытаскивания значений полей из задачи
+            value_columns = get_value_of_columns(columns['data'])
+            # Создание сессии с Jira
+            client_jira = jira(jira_api_key)
+            # Функция запроса задач с определенными полями
+            issues = get_all_issues(client_jira, jql['data'], value_columns)
+            # Функция записи полученного словаря в CSV
+            generate_data(issues, label_columns, filter)
+            logging.info('Был сформирован файл CSV')
+            return {'bool': True, 'text': 'Был сформирован файл CSV'}
+        else:
+            return columns
+    else:
+        return jql
 
 
 # Вытаскивание JQL из фильтра
@@ -29,15 +37,25 @@ def get_jql_filter(filter, api_key):
     url = f'{JIRA_URL}rest/api/2/filter/{filter}'
     headers = {"Authorization": f'Bearer {api_key}'}
     result = requests.get(url, headers=headers)
-    return result.json()['jql']
+    if 200 <= result.status_code < 300:
+        return {'bool': True, 'data': result.json()['jql']}
+    else:
+        logging.info('Ошибка: Ошибка в персональном токене или ID фильра')
+        return {'bool': False,
+                'error': 'Проверте персональный токен или ID фильра'}
 
 
 # Вытаскивание колонок из фильтра
 def get_columns_filter(filter, api_key):
     url = f'{JIRA_URL}rest/api/2/filter/{filter}/columns'
     headers = {"Authorization": f'Bearer {api_key}'}
-    columns = requests.get(url, headers=headers)
-    return columns.json()
+    result = requests.get(url, headers=headers)
+    columns = result.json()
+    if len(columns) == 0:
+        logging.info('Ошибка: У фильтра не настроены колоки')
+        return {'bool': False,
+                'error': 'У фильтра не настроены колонки'}
+    return {'bool': True, 'data': columns}
 
 
 # Вытаскивание наименования колонок фильтра
@@ -63,13 +81,10 @@ def get_value_of_columns(columns):
 
 # Создание сессии с Jira
 def jira(api_key):
-    try:
-        jira = JIRA(
-            server=JIRA_URL,
-            token_auth=api_key)
-        return jira
-    except (ConnectionError):
-        logging.info('Ошибка: Соединение с JIRA не успешно')
+    jira = JIRA(
+        server=JIRA_URL,
+        token_auth=api_key)
+    return jira
 
 
 # Функция запроса задач с определенными полями

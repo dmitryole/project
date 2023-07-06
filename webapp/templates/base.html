@@ -14,7 +14,9 @@
     <div class="container">
         <h1>{{ page_title }}</h1>
           {% include 'jira.html' %}
-          {% include 'search.html' %}
+          {% if status['bool'] %}
+            {% include 'search.html' %}
+          {% endif %}
     </div>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

@@ -25,11 +25,11 @@ def process_search():
     form = SearchForm()
 
     if form.validate_on_submit():
-        process_general_CSV_from_filter(filter=form.filter.data,
-                                        jira_api_key=form.token.data)
-        flash('Был сформирован файл CSV')
-        return send_file(f'issues_from_filter_{form.filter.data}.csv')
-        # return redirect(url_for('news.index'))
-    else:
-        flash('Неправильный токен или ID фильтра')
+        process = process_general_CSV_from_filter(filter=form.filter.data,
+                                                  jira_api_key=form.token.data)
+        if process['bool']:
+            flash(process['text'])
+            return send_file(f'issues_from_filter_{form.filter.data}.csv')
+        else:
+            flash(process['error'])
     return redirect(url_for('search.index'))

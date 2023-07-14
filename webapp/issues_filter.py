@@ -21,7 +21,8 @@ def process_general_CSV_from_filter(filter, jira_api_key):
             # Создание сессии с Jira
             client_jira = jira(jira_api_key)
             # Функция запроса задач с определенными полями
-            issues = get_all_issues(client_jira, jql['data'], value_columns)
+            issues = get_all_issues(client_jira, jql['data'],
+                                    value_columns, jira_api_key)
             # Функция записи полученного словаря в CSV
             generate_data(issues, label_columns, filter)
             logging.info('Был сформирован файл CSV')
@@ -88,7 +89,7 @@ def jira(api_key):
 
 
 # Функция запроса задач с определенными полями
-def get_all_issues(jira, jql_str, fields):
+def get_all_issues(jira, jql_str, fields, api_key):
     # Список задач с полями
     issues = []
     # Стартовый элемент
@@ -112,14 +113,14 @@ def get_all_issues(jira, jql_str, fields):
         # Перебор задач
         for issue in chunk_issues:
             # Вытаскивание полей из задач
-            issues.append(get_fields_issues(issue, fields))
+            issues.append(get_fields_issues(issue, fields, api_key))
         # Переход на элемент на следующей страницы
         start_at += max_results
     return issues
 
 
 # Функция вытаскиванния полей из задачи
-def get_fields_issues(issue, fields):
+def get_fields_issues(issue, fields, api_key):
     # Фиксируем ключ задачи
     field_issue = {}
     # Перебор полей
@@ -129,28 +130,54 @@ def get_fields_issues(issue, fields):
             field_issue['key'] = issue.key
         # Добавляем поля в словарь задачи
         else:
-            field_issue[field] = get_value_field(issue, field)
+            field_issue[field] = get_value_field(issue, field, api_key)
     return field_issue
 
 
 # Функция обработки значений полей
-def get_value_field(issue, field):
-    value_field = str(getattr(issue.fields, field))
+def get_value_field(issue, field, api_key):
+    value_field = getattr(issue.fields, field)
+    # Вытаскивание атрибута из объекта insight
+    if field == 'customfield_21501':
+        return (get_value_insight_field(value_field, api_key))
     # Вытаскивание значений из списка
-    if type(value_field) == list:
-        return ','.join(value_field)
+    elif type(value_field) == list:
+        return (','.join(value_field))
     # Преобразуем значение в строку
     elif type(value_field) != str:
         return str(value_field)
     elif type(value_field) == str:
         # Если в строке дата и время
         try:
-            value_field = datetime.strptime(
-                value_field, '%Y-%m-%dT%H:%M:%S.%f%z')
+            value_field = datetime.strptime(value_field,
+                                            '%Y-%m-%dT%H:%M:%S.%f%z')
             return value_field.strftime('%d.%m.%y')
         # Если строка не преобразуется, то возвращаем
         except (ValueError):
             return value_field
+
+
+# Функция вытаскиваения атрибутов из insight полей
+def get_value_insight_field(value_field, api_key):
+    # Вытаскивание значение из списка
+    insight_field = value_field[0]  # 'NNNNNNN (KEY-NNNNN)'
+    # Вытаскивания индефикатора обьекта
+    id = str(insight_field.split()[-1])[1:-1]  # KEY-NNNNN
+    # Запрос атрибутов обьекта
+    url = f'{JIRA_URL}rest/insight/1.0/object/{id}'
+    headers = {"Authorization": f'Bearer {api_key}'}
+    result = requests.get(url, headers=headers)
+    json_data = result.json()
+    # Получение словаря атрибутов
+    objects = json_data.get('attributes')
+    # Прохождение по славарю атрибутов
+    for object in objects:
+        # Вытаскиваение наименования атрибутов
+        name = object.get('objectTypeAttribute').get('name')
+        if name == 'Наименование':
+            # Вытаскиваение значения атрибута
+            value = object.get('objectAttributeValues')[0].get('value')
+            return value
 
 
 # Функция записи полученного словаря в CSV

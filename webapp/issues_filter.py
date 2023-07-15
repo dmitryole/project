@@ -160,10 +160,10 @@ def get_value_field(issue, field, api_key):
 # Функция вытаскиваения атрибутов из insight полей
 def get_value_insight_field(value_field, api_key):
     # Вытаскивание значение из списка
-    insight_field = value_field[0]  # 'NNNNNNN (KEY-NNNNN)'
-    # Вытаскивания индефикатора обьекта
-    id = str(insight_field.split()[-1])[1:-1]  # KEY-NNNNN
-    # Запрос атрибутов обьекта
+    insight_field = value_field[0]  # 'WorkspaceID (ObjectKeyNumber)'
+    # Вытаскивания ключа объекта
+    id = str(insight_field.split()[-1])[1:-1]  # ObjectKeyNumber
+    # Запрос атрибутов объекта
     url = f'{JIRA_URL}rest/insight/1.0/object/{id}'
     headers = {"Authorization": f'Bearer {api_key}'}
     result = requests.get(url, headers=headers)
